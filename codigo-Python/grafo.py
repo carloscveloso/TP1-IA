@@ -1,20 +1,26 @@
-from aStar import A_estrela  
-from dijkstra import Dijkstra  
+from algoritmos.aStar import A_estrela
+from algoritmos.dijkstra import Dijkstra
+from algoritmos.bidirectional_aStar import BidirectionalAStar
+from algoritmos.real_time_adaptative_aStar import RealTimeAdaptativeAStar
 
 class Graph:
     def __init__(self, adjacency_list):
         self.adjacency_list = adjacency_list
 
     def find_path(self, start, goal, algorithm):
-        if algorithm == "a_star":
+        if algorithm == "as":
             graph = A_estrela(self.adjacency_list)
             return graph.a_star_algorithm(start, goal)
-        elif algorithm == "dijkstra":
+        elif algorithm == "d":
             graph = Dijkstra.build_graph(self.adjacency_list)
             alg = Dijkstra(graph, start, goal)
             return alg.dijkstra_algorithm()
+        elif algorithm == "bas":
+            graph = BidirectionalAStar(self.adjacency_list)
+        elif algorithm == "rta":
+            graph = RealTimeAdaptativeAStar(self.adjacency_list)
         else:
-            raise ValueError("Invalid algorithm. Choose 'a_star' or 'dijkstra'.")
+            raise ValueError("Invalid algorithm. Choose 'a_star' or 'dijkstra' or 'bidirectional_aStar' or 'real_time_adaptative_aStar'.")
 
 adjacency_list = {
     'A': [('B', 5), ('F', 3)],
@@ -27,11 +33,11 @@ adjacency_list = {
     'H': [('C', 10), ('E', 5), ('G', 2)],
 }
 
-algorithm = input("Choose an algorithm (a_star/dijkstra): ").strip().lower()
+algorithm = input("Choose an algorithm (as/d/bas/rta): ").strip().lower()
 
-while algorithm not in ["a_star", "dijkstra"]:
-    print("Invalid choice. Please enter 'a_star' or 'dijkstra'.")
-    algorithm = input("Choose an algorithm (a_star/dijkstra): ").strip().lower()
+while algorithm not in ["as", "d", "bas", "rta"]:
+    print("Invalid choice. Please enter 'a_star' or 'dijkstra' or 'bidirectional_aStar' or 'real_time_adaptative_aStar'.")
+    algorithm = input("Choose an algorithm (AS/D/BAS/RTA): ").strip().lower()
 
 start = input("Enter the start node: ").strip().upper()
 goal = input("Enter the goal node: ").strip().upper()
@@ -40,6 +46,7 @@ graph = Graph(adjacency_list)
 path, cost = graph.find_path(start, goal, algorithm)
 
 if path:
+    print("")
     print(f"Path from {start} to {goal} using {algorithm.upper()}: {path}")
     print(f"Total path cost: {cost}")
 else:
