@@ -11,14 +11,18 @@ class Graph:
         if algorithm == "as":
             graph = A_estrela(self.adjacency_list)
             return graph.a_star_algorithm(start, goal)
+        
         elif algorithm == "d":
             graph = Dijkstra.build_graph(self.adjacency_list)
             alg = Dijkstra(graph, start, goal)
             return alg.dijkstra_algorithm()
+        
         elif algorithm == "bas":
             graph = BidirectionalAStar(self.adjacency_list)
+            return graph.bidirectional_a_star(start, goal)
         elif algorithm == "rta":
             graph = RealTimeAdaptativeAStar(self.adjacency_list)
+            return graph.rtaa_star_algorithm(start, goal)
         else:
             raise ValueError("Invalid algorithm. Choose 'a_star' or 'dijkstra' or 'bidirectional_aStar' or 'real_time_adaptative_aStar'.")
 

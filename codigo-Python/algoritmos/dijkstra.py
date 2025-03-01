@@ -118,11 +118,8 @@ class Dijkstra:
     def dijkstra_algorithm(self):
         target_node = self.graph.find_node(self.target)
         while not target_node.visited:
-            # # Select the node with the minimun distrance from start
             selected_node = self.minimum_distance()
-            # Update the status of the node (visited = True)
             selected_node.visited = True
-            # Update the labels of the neighbors
             for node in selected_node.neighbors:
                 connected_node = self.graph.find_node(node[0])
                 
@@ -130,7 +127,6 @@ class Dijkstra:
                     connected_node.length_from_start = selected_node.length_from_start + node[1]
                     connected_node.previous_node = selected_node.value
 
-        # Calculate the path from the source node to target node
         path = [target_node.value]
         while True:
             node = self.graph.find_node(path[-1])
@@ -144,11 +140,9 @@ class Dijkstra:
     def build_graph(adjacency_list):
         graph = Graph()
         
-        # Criar vértices
         for node in adjacency_list:
             graph.add_node(Vertex(node))
         
-        # Adicionar arestas
         for node, edges in adjacency_list.items():
             for neighbor, weight in edges:
                 if neighbor in [node.value for node in graph.nodes]:
