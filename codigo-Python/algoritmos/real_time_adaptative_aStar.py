@@ -1,86 +1,83 @@
-from collections import deque
+import heapq
 
 class RealTimeAdaptativeAStar:
     def __init__(self, adjacency_list):
         self.adjacency_list = adjacency_list
-        self.heuristic = {node: 1 for node in adjacency_list}
+        self.heuristic = {node: 1 for node in self.adjacency_list}
 
-    def get_neighbors(self, v):
-        return self.adjacency_list[v]
+    def get_neighbors(self, node):
+        return self.adjacency_list.get(node, [])
     
-    def h(self, n):
-        return self.heuristic[n]
+    def h(self, node):
+        return self.heuristic[node]
     
     def update_heuristic(self, visited, g):
         for node in visited:
             self.heuristic[node] = g[node]
 
     def a_star_step(self, start_node, stop_node, search_depth=3):
-        open_list = set([start_node])
-        closed_list =set([])
+        open_list = [(self.h(start_node), start_node)]  
+        closed_list = set()
         g = {start_node: 0}
-        parents = {start_node: start_node}
+        parents = {start_node: None}
         steps = 0
 
         while open_list and steps < search_depth:
-            n = None
+            _, n = heapq.heappop(open_list)  
 
-            for v in open_list:
-                if n is None or g[v] + self.h(v) < g[n] + self.h(n):
-                    n = v
-
-            if n is None:
-                return None, float('inf')
-            
             if n == stop_node:
                 path = []
-                total_cost = g[n]
-
-                while parents[n] != n:
+                while n:
                     path.append(n)
                     n = parents[n]
-
-                path.append(start_node)
                 path.reverse()
-                return path, total_cost
-            
-            for (m, weight) in self.get_neighbors(n):
-                if m not in open_list and m not in closed_list:
-                    open_list.add(m)
-                    parents[m] = n
-                    g[m] = g[n] + weight
-                else:
-                    if g[m] > g[n] + weight:
-                        g[m] = g[n] + weight
-                        parents[m] = n
-                        
-                        if m in closed_list:
-                            closed_list.remove(m)
-                            open_list.add(m)
+                return path, g[stop_node]
 
-            open_list.remove(n)
             closed_list.add(n)
+
+            for (m, weight) in self.get_neighbors(n):
+                if m in closed_list:
+                    continue
+
+                new_cost = g[n] + weight
+
+                if m not in g or new_cost < g[m]:  
+                    g[m] = new_cost
+                    parents[m] = n
+                    heapq.heappush(open_list, (g[m] + self.h(m), m))  
+
             steps += 1
 
         self.update_heuristic(closed_list, g)
+
+        if not closed_list:
+            return None, float('inf')
 
         best_node = min(closed_list, key=lambda node: g[node] + self.h(node))
         return [best_node], g[best_node]
     
     def rtaa_star_algorithm(self, start_node, stop_node):
+        """Executa o algoritmo Real Time Adaptative A*."""
         current_node = start_node
         total_path = [current_node]
         total_cost = 0
+        visited_nodes = set()
 
         while current_node != stop_node:
+            if current_node in visited_nodes:
+                print("Loop infinito encontrado!")
+                return None, float('inf')
+
+            visited_nodes.add(current_node)  
+
             path, cost = self.a_star_step(current_node, stop_node)
 
-            if not path:
+            if not path or cost == float('inf'):
                 print("Nenhum caminho encontrado.")
                 return None, float('inf')
-            
-            current_node = path[-1]
-            total_path.extend(path[1:])
+
+            current_node = path[-1]  
+            total_path.extend(path[1:])  
             total_cost += cost
-            
+
         return total_path, total_cost

@@ -1,4 +1,3 @@
-#https://python.plainenglish.io/dijkstras-algorithm-theory-and-python-implementation-c1135402c321
 import math
 
 class Node:
