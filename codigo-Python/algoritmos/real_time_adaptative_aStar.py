@@ -15,7 +15,7 @@ class RealTimeAdaptativeAStar:
         for node in visited:
             self.heuristic[node] = g[node]
 
-    def a_star_step(self, start_node, stop_node, search_depth=3):
+    def a_star_step(self, start_node, stop_node, search_depth=10):
         open_list = [(self.h(start_node), start_node)]  
         closed_list = set()
         g = {start_node: 0}
