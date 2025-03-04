@@ -24,7 +24,7 @@ class Graph:
             graph = RealTimeAdaptativeAStar(self.adjacency_list)
             return graph.rtaa_star_algorithm(start, goal)
         else:
-            raise ValueError("Invalid algorithm. Choose 'a_star' or 'dijkstra' or 'bidirectional_aStar' or 'real_time_adaptative_aStar'.")
+            raise ValueError("Escolha inválida.  Introduza 'as', 'd', 'bas' ou 'rta'.")
 
 adjacency_list = {
     'A': [('B', 5), ('F', 3)],
@@ -37,21 +37,21 @@ adjacency_list = {
     'H': [('C', 10), ('E', 5), ('G', 2)],
 }
 
-algorithm = input("Choose an algorithm (as/d/bas/rta): ").strip().lower()
+algorithm = input("Escolga um algoritmo (as/d/bas/rta): ").strip().lower()
 
 while algorithm not in ["as", "d", "bas", "rta"]:
-    print("Invalid choice. Please enter 'a_star' or 'dijkstra' or 'bidirectional_aStar' or 'real_time_adaptative_aStar'.")
-    algorithm = input("Choose an algorithm (AS/D/BAS/RTA): ").strip().lower()
+    print("Escolha inválida.  Introduza 'as', 'd', 'bas' ou 'rta'.")
+    algorithm = input("Escolha um algoritmo (AS/D/BAS/RTA): ").strip().lower()
 
-start = input("Enter the start node: ").strip().upper()
-goal = input("Enter the goal node: ").strip().upper()
+start = input("Introduza o node inicial: ").strip().upper()
+goal = input("Introduza o node objetivo: ").strip().upper()
 
 graph = Graph(adjacency_list)
-path, cost = graph.find_path(start, goal, algorithm)
+result = graph.find_path(start, goal, algorithm)
 
-if path:
-    print("")
-    print(f"Path from {start} to {goal} using {algorithm.upper()}: {path}")
-    print(f"Total path cost: {cost}")
+if result:
+    path, cost = result
+    print(f"\nCaminho encontrado entre {start} e {goal} utilizando {algorithm.upper()}: {path}")
+    print(f"Custo total do caminho: {cost}")
 else:
-    print(f"No path found from {start} to {goal}.")
+    print(f"Nenhum caminho encontrado ente {start} até {goal}.")

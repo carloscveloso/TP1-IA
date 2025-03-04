@@ -35,7 +35,7 @@ class A_estrela:
                     n = v
 
             if n is None:
-                print("Path does not exist!")
+                print("O caminho não existe!")
                 return None, float('inf')
 
             if n == stop_node:
@@ -68,5 +68,5 @@ class A_estrela:
             open_list.remove(n)
             closed_list.add(n)
 
-        print("Path does not exist!")
+        print("O caminho não existe!")
         return None, float('inf')

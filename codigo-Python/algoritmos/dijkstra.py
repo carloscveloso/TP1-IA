@@ -56,10 +56,10 @@ class Graph:
             node1.add_neighboor((node2, weight))
             node2.add_neighboor((node1, weight))
         else:
-            print("Error: One or more nodes were not found")
+            print("Erro: Um ou mais nodes não foram encontrados.")
 
     def number_of_nodes(self):
-        return f"The graph has {len(self.nodes)} nodes"
+        return f"O grafo tem {len(self.nodes)} nodes"
 
     def are_connected(self, node_one, node_two):
         node_one = self.find_node(node_one)

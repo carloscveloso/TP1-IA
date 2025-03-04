@@ -57,7 +57,6 @@ class RealTimeAdaptativeAStar:
         return [best_node], g[best_node]
     
     def rtaa_star_algorithm(self, start_node, stop_node):
-        """Executa o algoritmo Real Time Adaptative A*."""
         current_node = start_node
         total_path = [current_node]
         total_cost = 0
