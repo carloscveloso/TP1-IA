@@ -1,57 +1,128 @@
-from algoritmos.aStar import A_estrela
-from algoritmos.dijkstra import Dijkstra
-from algoritmos.bidirectional_aStar import BidirectionalAStar
-from algoritmos.real_time_adaptative_aStar import RealTimeAdaptativeAStar
+import csv
+import heapq
 
-class Graph:
-    def __init__(self, adjacency_list):
-        self.adjacency_list = adjacency_list
+# Nome do ficheiro CSV
+filename = "trajetos.csv"
 
-    def find_path(self, start, goal, algorithm):
-        if algorithm == "as":
-            graph = A_estrela(self.adjacency_list)
-            return graph.a_star_algorithm(start, goal)
+# Criar e escrever no ficheiro CSV
+with open(filename, mode='w', newline='', encoding='utf-8') as file:
+    writer = csv.writer(file)
+    
+    # Escrever as linhas no formato: origem, destino, kms, litros, minutos
+    writer.writerow(["A", "F", 30, 4, 5])
+    writer.writerow(["F", "B", 20, 3, 4])
+    writer.writerow(["B", "C", 15, 2, 3])
+    writer.writerow(["C", "D", 25, 4, 6])
+    writer.writerow(["D", "E", 10, 1, 2])
+    writer.writerow(["E", "A", 35, 5, 7])
+
+print(f"Ficheiro '{filename}' criado com sucesso!")
+
+
+# Função para carregar o grafo a partir do CSV
+def load_graph_from_csv(filename):
+    graph = {}
+    
+    with open(filename, mode='r', newline='', encoding='utf-8') as file:
+        reader = csv.reader(file)
         
-        elif algorithm == "d":
-            graph = Dijkstra.build_graph(self.adjacency_list)
-            alg = Dijkstra(graph, start, goal)
-            return alg.dijkstra_algorithm()
-        
-        elif algorithm == "bas":
-            graph = BidirectionalAStar(self.adjacency_list)
-            return graph.bidirectional_a_star(start, goal)
-        elif algorithm == "rta":
-            graph = RealTimeAdaptativeAStar(self.adjacency_list)
-            return graph.rtaa_star_algorithm(start, goal)
-        else:
-            raise ValueError("Escolha inválida.  Introduza 'as', 'd', 'bas' ou 'rta'.")
+        for row in reader:
+            origem, destino = row[0], row[1]
+            distancia = int(row[2])
+            combustivel = int(row[3])
+            tempo = int(row[4])
 
-adjacency_list = {
-    'A': [('B', 5), ('F', 3)],
-    'B': [('A', 5), ('B', 2), ('G', 3)],
-    'C': [('B', 2), ('D', 6), ('H', 10)],
-    'D': [('C', 6), ('E', 3)],
-    'E': [('D', 3), ('F', 8), ('H', 5)],
-    'F': [('A', 3), ('E', 8), ('G', 7)],
-    'G': [('B', 3), ('F', 7), ('H', 2)],
-    'H': [('C', 10), ('E', 5), ('G', 2)],
-}
+            # Adicionar ao grafo bidirecional
+            if origem not in graph:
+                graph[origem] = []
+            if destino not in graph:
+                graph[destino] = []
+                
+            graph[origem].append((destino, distancia, combustivel, tempo))
+            graph[destino].append((origem, distancia, combustivel, tempo))  # Se for bidirecional
 
-algorithm = input("Escolga um algoritmo (as/d/bas/rta): ").strip().lower()
+    return graph
 
-while algorithm not in ["as", "d", "bas", "rta"]:
-    print("Escolha inválida.  Introduza 'as', 'd', 'bas' ou 'rta'.")
-    algorithm = input("Escolha um algoritmo (AS/D/BAS/RTA): ").strip().lower()
 
-start = input("Introduza o node inicial: ").strip().upper()
-goal = input("Introduza o node objetivo: ").strip().upper()
+# Heurística simples (para melhorar, poderia ser a distância real)
+def heuristic(nodo, destino):
+    return 0
 
-graph = Graph(adjacency_list)
-result = graph.find_path(start, goal, algorithm)
 
-if result:
-    path, cost = result
-    print(f"\nCaminho encontrado entre {start} e {goal} utilizando {algorithm.upper()}: {path}")
-    print(f"Custo total do caminho: {cost}")
+# Algoritmo A* padrão
+def a_star(graph, start, goal):
+    open_set = []
+    heapq.heappush(open_set, (0, start))
+
+    came_from = {}
+    g_score = {node: float('inf') for node in graph}
+    g_score[start] = 0
+
+    while open_set:
+        _, current = heapq.heappop(open_set)
+
+        if current == goal:
+            return reconstruct_path(came_from, start, goal, g_score)
+
+        for neighbor, distancia, _, _ in graph[current]:
+            tentative_g_score = g_score[current] + distancia
+
+            if tentative_g_score < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g_score
+                heapq.heappush(open_set, (tentative_g_score + heuristic(neighbor, goal), neighbor))
+
+    return None
+
+
+# Algoritmo Dynamic A* (D*)
+def d_star(graph, start, goal):
+    return a_star(graph, start, goal)  # Neste caso, estamos usando A* como base
+
+
+# Função para reconstruir o caminho e calcular o custo total
+def reconstruct_path(came_from, start, goal, g_score):
+    path = []
+    current = goal
+    total_cost = g_score[goal]
+
+    while current in came_from:
+        path.append(current)
+        current = came_from[current]
+
+    path.append(start)
+    path.reverse()
+    
+    return path, total_cost
+
+
+# Carregar o grafo
+grafo = load_graph_from_csv(filename)
+
+# Escolher o algoritmo
+print("\nEscolha o algoritmo:")
+print("1 - A*")
+print("2 - Dynamic A* (D*)")
+
+alg_opcao = input("Opção: ")
+
+# Escolher pontos do grafo
+start = input("Digite o ponto inicial: ").strip().upper()
+goal = input("Digite o ponto final: ").strip().upper()
+
+if start in grafo and goal in grafo:
+    if alg_opcao == "1":
+        path, cost = a_star(grafo, start, goal)
+        print(f"\nCaminho encontrado (A*): {path}")
+        print(f"Custo total: {cost} km")
+
+    elif alg_opcao == "2":
+        path, cost = d_star(grafo, start, goal)
+        print(f"\nCaminho encontrado (D*): {path}")
+        print(f"Custo total: {cost} km")
+
+    else:
+        print("Opção inválida!")
+
 else:
-    print(f"Nenhum caminho encontrado ente {start} até {goal}.")
+    print("Pontos inválidos!")
