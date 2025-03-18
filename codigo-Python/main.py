@@ -1,64 +1,61 @@
+from importar_grafo import importar_grafo
+from algoritmos import aStar, anytime_DStar, dynamic_AStar
 import numpy as np
-import csv
-import heapq
-from algoritmos import aStar, dynamic_aStar, anytime_DStar
 
-def carregar_grafo():
-    nome_arquivo = "cities_nodes_special.csv"
-    with open(nome_arquivo, newline='', encoding='utf-8') as csvfile:
-        reader = csv.reader(csvfile)
-        dados = [row for row in reader][1:] 
+def escolher_algoritmo():
+    print("\nEscolha o algoritmo de busca:")
+    print("1 - A* (A estrela)")
+    print("2 - Anytime D*")
+    print("3 - Dynamic A*")
     
-    cidades = {}
-    index = 0
-    edges = []
+    while True:
+        escolha = input("Digite o número do algoritmo: ")
+        if escolha in ["1", "2", "3"]:
+            return escolha
+        else:
+            print("Escolha inválida! Tente novamente.")
+
+def escolher_nodo(indices):
+    print("\nNós disponíveis:", list(indices.keys()))
     
-    for row in dados:
-        origem, destino, _, _, distancia = row
-        if origem not in cidades:
-            cidades[origem] = index
-            index += 1
-        if destino not in cidades:
-            cidades[destino] = index
-            index += 1
-        edges.append((origem, destino, float(distancia)))
-    
-    adjacency_list = {cidade: [] for cidade in cidades}
-    for origem, destino, distancia in edges:
-        adjacency_list[origem].append((destino, distancia))
-        adjacency_list[destino].append((origem, distancia))  
-    
-    return cidades, adjacency_list
+    while True:
+        escolha = input("Digite o nome do nodo: ")
+        if escolha in indices:
+            return escolha
+        else:
+            print("Nodo inválido! Tente novamente.")
 
 def main():
-    cidades, adjacency_list = carregar_grafo()
+    nome_arquivo = "cities_nodes_special.csv"
     
-    print("Escolha o algoritmo:")
-    print("1 - A*")
-    opcao = input("Opção: ")
+    print("\nImportando o gráfico...")
+    indices, matriz = importar_grafo(nome_arquivo)
     
-    if opcao != "1":
-        print("Opção inválida!")
-        return
+    algoritmo = escolher_algoritmo()
     
-    print("Cidades disponíveis:")
-    for cidade in cidades.keys():
-        print(cidade)
+    print("\nEscolha o nodo de origem:")
+    origem = escolher_nodo(indices)
     
-    inicio = input("Digite a cidade inicial: ")
-    objetivo = input("Digite a cidade objetivo: ")
+    print("\nEscolha o nodo de destino:")
+    destino = escolher_nodo(indices)
+
+    if algoritmo == "1":
+        print(f"\nCaminho de {origem} para {destino} usando A*...")
+        caminho, custo = aStar.aStar(indices, matriz, origem, destino)
     
-    if inicio not in cidades or objetivo not in cidades:
-        print("Cidades inválidas!")
-        return
+    elif algoritmo == "2":
+        print(f"\nCaminho de {origem} para {destino} usando Anytime D*...")
+        caminho, custo = anytime_DStar(indices, matriz, origem, destino)
     
-    caminho, custo = aStar(adjacency_list, inicio, objetivo)
-    
+    elif algoritmo == "3":
+        print(f"\nCaminho de {origem} para {destino} usando Dynamic A*...")
+        caminho, custo = dynamic_AStar(indices, matriz, origem, destino)
+
     if caminho:
-        print("\nCaminho encontrado:", " -> ".join(caminho))
-        print(f"Custo total: {custo:.2f} km")
+        print("\nCaminho encontrado:", " → ".join(caminho))
+        print(f"Custo total: {custo}")
     else:
-        print("Nenhum caminho encontrado.")
+        print("\nNão foi possível encontrar um caminho.")
 
 if __name__ == "__main__":
     main()

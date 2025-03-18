@@ -1,45 +1,40 @@
-from collections import deque
+import heapq
+import numpy as np
 
-def a_star(adjacency_list, start_node, stop_node):
-    open_list = set([start_node])  
-    closed_list = set([]) 
+def heuristic(node, goal):
+    return np.linalg.norm(node - goal)
 
-    g = {node: float('inf') for node in adjacency_list}
-    g[start_node] = 0  
-    parents = {start_node: None}  
+def aStar(indices, matriz, start, goal):
+    open_set = []
+    heapq.heappush(open_set, (0, start))
 
-    def h(n):  
-        return 0  
+    came_from = {}
+    goal_score = {node: float('inf') for node in indices}
+    goal_score[start] = 0
 
-    while open_list:
-        n = min(open_list, key=lambda v: g[v] + h(v))
+    while open_set:
+        _, current = heapq.heappop(open_set)
 
-        if n == stop_node:
+        if current == goal:
             path = []
-            total_cost = g[n]  
-
-            while n is not None:
-                path.append(n)
-                n = parents[n]
-
+            while current in came_from:
+                path.append(current)
+                current = came_from[current]
+            path.append(start)
             path.reverse()
-            return path, total_cost
+            return path, goal_score[goal]
 
-        open_list.remove(n)
-        closed_list.add(n)
+        for neighbor_index in range(len(indices)): 
+            distancia = matriz[current, neighbor_index, 0]  
 
-        for (neighbor, weight) in adjacency_list[n]:
-            if neighbor in closed_list:
+            if distancia == np.inf:
                 continue
 
-            tentative_g = g[n] + weight
+            tentative_goal_score = goal_score[current] + distancia
 
-            if neighbor not in open_list:
-                open_list.add(neighbor)
-            elif tentative_g >= g[neighbor]:
-                continue
+            if tentative_goal_score < goal_score[neighbor_index]:
+                came_from[neighbor_index] = current
+                goal_score[neighbor_index] = tentative_goal_score
+                heapq.heappush(open_set, (tentative_goal_score + heuristic(neighbor_index, goal), neighbor_index))
 
-            parents[neighbor] = n
-            g[neighbor] = tentative_g
-
-    return None, float('inf')
+    return None
