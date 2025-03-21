@@ -1,41 +1,62 @@
-import csv
+import pandas as pd
 import numpy as np
 
-def importar_grafo(nome_arquivo):
-    indices = {}
-    contador = 0
+# Função para importar o CSV para uma matriz de adjacência com três variáveis
+def importar_grafo(csv_file):
+    # Carregar o CSV (ajuste conforme necessário se o delimitador for diferente)
+    df = pd.read_csv(csv_file, header=None, names=["origin_city", "destination_city", "distance_km", "fuel_liters", "toll"], delimiter=',')
 
-    # Primeira leitura para mapear os nós (origem e destino)
-    with open(nome_arquivo, newline='', encoding='utf-8') as csvfile:
-        reader = csv.reader(csvfile)
-        next(reader)  
+    df["origin_city"] = df["origin_city"].str.strip()
+    df["destination_city"] = df["destination_city"].str.strip()
+    
+    # Verificar se o CSV foi carregado corretamente
+    print("Dados carregados:")
+    print(df.head())
 
-        for row in reader:
-            if len(row) >= 5:  
-                origem, destino, *_ = row  
-                if origem not in indices:
-                    indices[origem] = contador
-                    contador += 1
-                if destino not in indices:
-                    indices[destino] = contador
-                    contador += 1
+    df = df.fillna({
+        "distance_km": np.inf,
+        "fuel_liters": np.inf,
+        "toll": np.inf
+    })
+    
+    # Criar lista única de cidades
+    cities = list(set(df["origin_city"].tolist() + df["destination_city"].tolist()))
+    n = len(cities)
 
-    tamanho = len(indices)
-    matriz = np.full((tamanho, tamanho, 3), np.inf)  
-
-    # Segunda leitura para preencher a matriz com distâncias, combustível e tempo
-    with open(nome_arquivo, newline='', encoding='utf-8') as csvfile:
-        reader = csv.reader(csvfile)
-        next(reader)  
-
-        for row in reader:
-            if len(row) >= 5:  
-                origem, destino, toll, combustivel, distancia = row  
-                origem_index = indices[origem]
-                destino_index = indices[destino]
-                matriz[origem_index, destino_index, 0] = float(distancia)  # Quilômetros
-                matriz[origem_index, destino_index, 1] = float(combustivel)  # Litros de combustível
-                minutos_estimados = float(distancia) / float(combustivel)  
-                matriz[origem_index, destino_index, 2] = minutos_estimados  # Tempo em minutos
-    return indices, matriz
-
+    # Criar matriz de adjacência inicializada com infinito (sem conexão)
+    adj_matrix = np.full((n, n, 3), np.inf)  
+    np.fill_diagonal(adj_matrix[:, :, 0], 0)  
+    np.fill_diagonal(adj_matrix[:, :, 1], 0)  
+    np.fill_diagonal(adj_matrix[:, :, 2], 0) 
+    
+    # Criar mapeamento de índices das cidades
+    city_to_index = {city: i for i, city in enumerate(cities)}
+    
+    # Verificar se as cidades estão corretas
+    print("Cidades detectadas:")
+    print(cities)
+    
+    # Preencher a matriz com distâncias, combustível e portagens
+    for _, row in df.iterrows():
+        i, j = city_to_index[row["origin_city"]], city_to_index[row["destination_city"]]
+        
+        # Debug: Mostrar o que está sendo atribuído
+        print(f"Processando: {row['origin_city']} -> {row['destination_city']} | Distância: {row['distance_km']} | Combustível: {row['fuel_liters']} | Portagens: {row['toll']}")
+        
+        adj_matrix[i, j] = [row["distance_km"], row["fuel_liters"], row["toll"]]
+        adj_matrix[j, i] = [row["distance_km"], row["fuel_liters"], row["toll"]] 
+    
+    # Converter a matriz para DataFrame para melhor visualização
+    adj_matrix_df = pd.DataFrame(adj_matrix[:, :, 0], index=cities, columns=cities)
+    print("\nMatriz de Distância (km):")
+    print(adj_matrix_df)
+    
+    adj_matrix_df_fuel = pd.DataFrame(adj_matrix[:, :, 1], index=cities, columns=cities)
+    print("\nMatriz de Combustível (litros):")
+    print(adj_matrix_df_fuel)
+    
+    adj_matrix_df_toll = pd.DataFrame(adj_matrix[:, :, 2], index=cities, columns=cities)
+    print("\nMatriz de Pedágio (toll):")
+    print(adj_matrix_df_toll)
+    
+    return adj_matrix, cities

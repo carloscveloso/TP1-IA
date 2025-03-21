@@ -30,7 +30,7 @@ def main():
     
     print("\nImportando o gráfico...")
     indices, matriz = importar_grafo(nome_arquivo)
-    
+    print(matriz)
     algoritmo = escolher_algoritmo()
     
     print("\nEscolha o nodo de origem:")
