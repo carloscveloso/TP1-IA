@@ -4,10 +4,17 @@ import numpy as np
 # Função para importar o CSV para uma matriz de adjacência com três variáveis
 def importar_grafo(csv_file):
     # Carregar o CSV (ajuste conforme necessário se o delimitador for diferente)
-    df = pd.read_csv(csv_file, header=None, names=["origin_city", "destination_city", "distance_km", "fuel_liters", "toll"], delimiter=',')
+    df = pd.read_csv(csv_file, delimiter=',')
+    df.columns = df.columns.str.strip()
+
+    print("Colunas do DataFrame:", df.columns.tolist())
 
     df["origin_city"] = df["origin_city"].str.strip()
     df["destination_city"] = df["destination_city"].str.strip()
+
+    df["distance_km"] = pd.to_numeric(df["distance_km"], errors='coerce')
+    df["fuel"] = pd.to_numeric(df["fuel"], errors='coerce')
+    df["toll"] = pd.to_numeric(df["toll"], errors='coerce')
     
     # Verificar se o CSV foi carregado corretamente
     print("Dados carregados:")
@@ -15,7 +22,7 @@ def importar_grafo(csv_file):
 
     df = df.fillna({
         "distance_km": np.inf,
-        "fuel_liters": np.inf,
+        "fuel": np.inf,
         "toll": np.inf
     })
     
@@ -41,10 +48,10 @@ def importar_grafo(csv_file):
         i, j = city_to_index[row["origin_city"]], city_to_index[row["destination_city"]]
         
         # Debug: Mostrar o que está sendo atribuído
-        print(f"Processando: {row['origin_city']} -> {row['destination_city']} | Distância: {row['distance_km']} | Combustível: {row['fuel_liters']} | Portagens: {row['toll']}")
+        print(f"Processando: {row['origin_city']} -> {row['destination_city']} | Distância: {row['distance_km']} | Combustível: {row['fuel']} | Portagens: {row['toll']}")
         
-        adj_matrix[i, j] = [row["distance_km"], row["fuel_liters"], row["toll"]]
-        adj_matrix[j, i] = [row["distance_km"], row["fuel_liters"], row["toll"]] 
+        adj_matrix[i, j] = [row["distance_km"], row["fuel"], row["toll"]]
+        adj_matrix[j, i] = [row["distance_km"], row["fuel"], row["toll"]] 
     
     # Converter a matriz para DataFrame para melhor visualização
     adj_matrix_df = pd.DataFrame(adj_matrix[:, :, 0], index=cities, columns=cities)

@@ -1,61 +1,109 @@
-from importar_grafo import importar_grafo
-from algoritmos import aStar, anytime_DStar, dynamic_AStar
+import os
+import pandas as pd
 import numpy as np
-
-def escolher_algoritmo():
-    print("\nEscolha o algoritmo de busca:")
-    print("1 - A* (A estrela)")
-    print("2 - Anytime D*")
-    print("3 - Dynamic A*")
-    
-    while True:
-        escolha = input("Digite o número do algoritmo: ")
-        if escolha in ["1", "2", "3"]:
-            return escolha
-        else:
-            print("Escolha inválida! Tente novamente.")
-
-def escolher_nodo(indices):
-    print("\nNós disponíveis:", list(indices.keys()))
-    
-    while True:
-        escolha = input("Digite o nome do nodo: ")
-        if escolha in indices:
-            return escolha
-        else:
-            print("Nodo inválido! Tente novamente.")
+from algoritmos.aStar import A_estrela
+from algoritmos.dynamic_AStar import DStar
+from algoritmos.anytime_DStar import AnytimeDStar
+from importar_grafo import importar_grafo
 
 def main():
-    nome_arquivo = "cities_nodes_special.csv"
-    
-    print("\nImportando o gráfico...")
-    indices, matriz = importar_grafo(nome_arquivo)
-    print(matriz)
-    algoritmo = escolher_algoritmo()
-    
-    print("\nEscolha o nodo de origem:")
-    origem = escolher_nodo(indices)
-    
-    print("\nEscolha o nodo de destino:")
-    destino = escolher_nodo(indices)
+    csv_file = "cities_nodes_special.csv"
 
-    if algoritmo == "1":
-        print(f"\nCaminho de {origem} para {destino} usando A*...")
-        caminho, custo = aStar.aStar(indices, matriz, origem, destino)
+    if not os.path.exists(csv_file):
+        print(f"Erro ao abrir o ficheiro {csv_file}")
+        return
     
-    elif algoritmo == "2":
-        print(f"\nCaminho de {origem} para {destino} usando Anytime D*...")
-        caminho, custo = anytime_DStar(indices, matriz, origem, destino)
-    
-    elif algoritmo == "3":
-        print(f"\nCaminho de {origem} para {destino} usando Dynamic A*...")
-        caminho, custo = dynamic_AStar(indices, matriz, origem, destino)
+    adj_matrix, cities = importar_grafo(csv_file)
 
-    if caminho:
-        print("\nCaminho encontrado:", " → ".join(caminho))
-        print(f"Custo total: {custo}")
+    print("\nLista de cidades disponíveis: ")
+    for i, city in enumerate(cities):
+        print(f"{i}: {city}")
+
+    print("\nEscolha o algoritmo: ")
+    print("1")
+    algoritmo = input("Digite o número do algoritmo desejado: ")
+    
+    start_city = input("Introduza a cidade de origem: ").strip()
+    end_city = input("Introduza a cidade de destino: ").strip()
+
+    if start_city not in cities or end_city not in cities:
+        print("A cidade introduzida não existe.")
+        return
+    
+    adjacency_list = {}
+    n = len(cities)
+    city_index = {city: i for i, city in enumerate(cities)}
+
+    for i in range(n):
+        city = cities[i]
+        neighbors = []
+        for j in range(n):
+            if not np.any(adj_matrix[i, j] == np.inf) and i != j:
+                neighbors.append((cities[j], adj_matrix[i, j]))
+        adjacency_list[city] = neighbors
+
+    a_star = A_estrela(adjacency_matrix=adj_matrix, cities=cities)
+    result = a_star.a_star_algorithm(start_city, end_city)
+
+    if result:
+        path, cost = result
+        print(f"\nCaminho encontrado entre {start_city} e {end_city} utilizando {algoritmo}: {path}")
+        print(f"Custo total do caminho: {cost}")
     else:
-        print("\nNão foi possível encontrar um caminho.")
+        print(f"Nenhum caminho encontrado ente {start_city} até {end_city}.")
 
 if __name__ == "__main__":
     main()
+
+
+"""
+class Graph:
+    def __init__(self, adjacency_list):
+        self.adjacency_list = adjacency_list
+
+    def find_path(self, start, goal, algorithm):
+        if algorithm == "as":
+            graph = A_estrela(self.adjacency_list)
+            return graph.a_star_algorithm(start, goal)
+        
+        elif algorithm == "d":
+            graph = DStar.build_graph(self.adjacency_list)
+            alg = DStar(graph, start, goal)
+            return alg.dijkstra_algorithm()
+        
+        elif algorithm == "bas":
+            graph = AnytimeDStar(self.adjacency_list)
+            return graph.bidirectional_a_star(start, goal)
+        else:
+            raise ValueError("Escolha inválida.  Introduza 'as', 'd', 'bas' ou 'rta'.")
+
+adjacency_list = {
+    'A': [('B', 5), ('F', 3)],
+    'B': [('A', 5), ('B', 2), ('G', 3)],
+    'C': [('B', 2), ('D', 6), ('H', 10)],
+    'D': [('C', 6), ('E', 3)],
+    'E': [('D', 3), ('F', 8), ('H', 5)],
+    'F': [('A', 3), ('E', 8), ('G', 7)],
+    'G': [('B', 3), ('F', 7), ('H', 2)],
+    'H': [('C', 10), ('E', 5), ('G', 2)],
+}
+
+algorithm = input("Escolga um algoritmo (as/d/bas/rta): ").strip().lower()
+
+while algorithm not in ["as", "d", "bas", "rta"]:
+    print("Escolha inválida.  Introduza 'as', 'd', 'bas' ou 'rta'.")
+    algorithm = input("Escolha um algoritmo (AS/D/BAS/RTA): ").strip().lower()
+
+start = input("Introduza o node inicial: ").strip().upper()
+goal = input("Introduza o node objetivo: ").strip().upper()
+
+graph = Graph(adjacency_list)
+result = graph.find_path(start, goal, algorithm)
+
+if result:
+    path, cost = result
+    print(f"\nCaminho encontrado entre {start} e {goal} utilizando {algorithm.upper()}: {path}")
+    print(f"Custo total do caminho: {cost}")
+else:
+    print(f"Nenhum caminho encontrado ente {start} até {goal}.")"
+    """
