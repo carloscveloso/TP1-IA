@@ -27,7 +27,7 @@ def importar_grafo(csv_file):
     })
     
     # Criar lista única de cidades
-    cities = list(set(df["origin_city"].tolist() + df["destination_city"].tolist()))
+    cities = sorted(set(df["origin_city"].tolist() + df["destination_city"].tolist()))
     n = len(cities)
 
     # Criar matriz de adjacência inicializada com infinito (sem conexão)
@@ -63,7 +63,7 @@ def importar_grafo(csv_file):
     print(adj_matrix_df_fuel)
     
     adj_matrix_df_toll = pd.DataFrame(adj_matrix[:, :, 2], index=cities, columns=cities)
-    print("\nMatriz de Pedágio (toll):")
+    print("\nMatriz de Portagens (toll):")
     print(adj_matrix_df_toll)
     
     return adj_matrix, cities
