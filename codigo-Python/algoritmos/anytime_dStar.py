@@ -4,44 +4,11 @@ class AnytimeDStar:
     def __init__(self, adjacency_matrix, cities):
         self.adjacency_matrix = adjacency_matrix  
         self.cities = cities  
-        self.g = {}  
-        self.rhs = {}  
+        self.g_values = {}  
+        self.rhs_values = {}  
+        self.parents = {}  
         self.open_list = []
-        self.epsilon = 2.5
-        self.parents = {}
-    
-
-    def initialize(self, start_city, goal_city):
-        """Inicializa os valores e a fila de prioridade"""
-        for city in self.cities:
-            self.g[city] = float('inf')
-            self.rhs[city] = float('inf')
-            self.parents[city] = None
-        self.rhs[goal_city] = 0
-        heapq.heappush(self.open_list, (self.h(start_city, goal_city), start_city))
-
-    def h(self, city, goal_city):
-        return 1
-
-    def update_vertex(self, city):
-        if city != self.start_city:
-            self.rhs[city] = min(self.g[neighbor] + cost for neighbor, cost in self.get_neighbors(city))
-        if city in self.open_list:
-            self.open_list.remove(city)
-        if self.g[city] != self.rhs[city]:
-            heapq.heappush(self.open_list, (self.rhs[city] + self.epsilon * self.h(city, self.goal_city), city))
-
-    def compute_shortest_path(self):
-        while self.open_list and (self.open_list[0][0] < self.g[self.start_city] or self.rhs[self.start_city] != self.g[self.start_city]):
-            _, city = heapq.heappop(self.open_list)
-            if self.g[city] > self.rhs[city]:
-                self.g[city] = self.rhs[city]
-                for neighbor, _ in self.get_neighbors(city):
-                    self.update_vertex(neighbor)
-            else:
-                self.g[city] = float('inf')
-                for neighbor, _ in self.get_neighbors(city) + [(city, 0)]:
-                    self.update_vertex(neighbor)
+        self.goal = None  
 
     def get_neighbors(self, city):
         index = self.cities.index(city)
@@ -51,32 +18,60 @@ class AnytimeDStar:
                 neighbors.append((self.cities[i], costs[0]))  
         return neighbors
 
-    def improve_solution(self):
-        self.epsilon *= 0.9  # Reduzir epsilon para melhorar caminho
-        self.compute_shortest_path()
+    def h(self, city):
+        return 1  
+
+    def initialize(self, start_city, goal_city):
+        self.goal = goal_city  
+
+        self.g_values = {city: float('inf') for city in self.cities}
+        self.rhs_values = {city: float('inf') for city in self.cities}
+        self.parents = {city: None for city in self.cities}
+
+        self.rhs_values[goal_city] = 0
+        heapq.heappush(self.open_list, (self.calculate_key(goal_city), goal_city))
+
+    def update_vertex(self, city):
+        if city != self.goal:
+            self.rhs_values[city] = min(
+                [self.g_values[neighbor] + cost for neighbor, cost in self.get_neighbors(city)] or [float('inf')]
+            )
+
+        if city in self.open_list:
+            self.open_list = [(key, c) for key, c in self.open_list if c != city]
+            heapq.heapify(self.open_list)
+
+        if self.g_values[city] != self.rhs_values[city]:
+            heapq.heappush(self.open_list, (self.calculate_key(city), city))
+
+    def calculate_key(self, city):
+        g_rhs_min = min(self.g_values[city], self.rhs_values[city])
+        return (g_rhs_min + self.h(city), g_rhs_min)  
 
     def find_path(self, start_city, goal_city):
-        self.start_city = start_city
-        self.goal_city = goal_city
         self.initialize(start_city, goal_city)
-        self.compute_shortest_path()
 
+        while self.open_list and (self.open_list[0][0] < self.calculate_key(start_city) or self.rhs_values[start_city] != self.g_values[start_city]):
+            _, current_city = heapq.heappop(self.open_list)
+
+            if self.g_values[current_city] > self.rhs_values[current_city]:
+                self.g_values[current_city] = self.rhs_values[current_city]
+            else:
+                self.g_values[current_city] = float('inf')
+                self.update_vertex(current_city)
+
+            for neighbor, _ in self.get_neighbors(current_city):
+                self.update_vertex(neighbor)
+
+        return self.reconstruct_path(start_city, goal_city)
+
+    def reconstruct_path(self, start, goal):
         path = []
-        city = start_city
-        if self.g[start_city] == float('inf'):
-            print("Caminho não encontrado!")
-            return None, float('inf')
+        current = start
+        while current is not None and current != goal:
+            path.append(current)
+            current = self.parents[current] if self.parents[current] in self.cities else None
 
-        while city != goal_city:
-            path.append(city)
-            city = min(self.get_neighbors(city), key=lambda x: self.g[x[0]])[0]
-
-        path.append(goal_city)
-        print(f"Caminho inicial encontrado: {path}, Custo total: {self.g[start_city]}")
-
-        # Melhorar a solução iterativamente
-        for _ in range(10):  
-            self.improve_solution()
-            print(f"Nova solução encontrada com ε = {self.epsilon:.2f}: {path}, Custo total: {self.g[start_city]}")
-
-        return path, self.g[start_city]
+        path.append(goal)
+        total_cost = self.g_values[start]
+        return path, total_cost
