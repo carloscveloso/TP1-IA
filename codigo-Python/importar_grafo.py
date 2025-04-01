@@ -12,18 +12,18 @@ def importar_grafo(csv_file):
     df["origin_city"] = df["origin_city"].str.strip()
     df["destination_city"] = df["destination_city"].str.strip()
 
-    df["distance_km"] = pd.to_numeric(df["distance_km"], errors='coerce')
-    df["fuel"] = pd.to_numeric(df["fuel"], errors='coerce')
-    df["toll"] = pd.to_numeric(df["toll"], errors='coerce')
+    df["distance_km"] = pd.to_numeric(df["distance_km"], errors='coerce').astype(np.float64)
+    df["fuel"] = pd.to_numeric(df["fuel"], errors='coerce').astype(np.float64)
+    df["toll"] = pd.to_numeric(df["toll"], errors='coerce').astype(np.float64)
     
     # Verificar se o CSV foi carregado corretamente
     print("Dados carregados:")
     print(df.head())
 
     df = df.fillna({
-        "distance_km": np.inf,
-        "fuel": np.inf,
-        "toll": np.inf
+        "distance_km": np.nan,
+        "fuel": np.nan,
+        "toll": np.nan
     })
     
     # Criar lista única de cidades
@@ -31,10 +31,10 @@ def importar_grafo(csv_file):
     n = len(cities)
 
     # Criar matriz de adjacência inicializada com infinito (sem conexão)
-    adj_matrix = np.full((n, n, 3), np.inf)  
-    np.fill_diagonal(adj_matrix[:, :, 0], 0)  
-    np.fill_diagonal(adj_matrix[:, :, 1], 0)  
-    np.fill_diagonal(adj_matrix[:, :, 2], 0) 
+    adj_matrix = np.full((n, n, 3), np.nan)  
+    np.fill_diagonal(adj_matrix[:, :, 0], 0.0)  
+    np.fill_diagonal(adj_matrix[:, :, 1], 0.0)  
+    np.fill_diagonal(adj_matrix[:, :, 2], 0.0)     
     
     # Criar mapeamento de índices das cidades
     city_to_index = {city: i for i, city in enumerate(cities)}
