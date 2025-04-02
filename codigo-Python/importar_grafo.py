@@ -39,10 +39,6 @@ def importar_grafo(csv_file):
     # Criar mapeamento de índices das cidades
     city_to_index = {city: i for i, city in enumerate(cities)}
     
-    # Verificar se as cidades estão corretas
-    print("Cidades detectadas:")
-    print(cities)
-    
     # Preencher a matriz com distâncias, combustível e portagens
     for _, row in df.iterrows():
         i, j = city_to_index[row["origin_city"]], city_to_index[row["destination_city"]]
@@ -52,18 +48,5 @@ def importar_grafo(csv_file):
         
         adj_matrix[i, j] = [row["distance_km"], row["fuel"], row["toll"]]
         adj_matrix[j, i] = [row["distance_km"], row["fuel"], row["toll"]] 
-    
-    # Converter a matriz para DataFrame para melhor visualização
-    adj_matrix_df = pd.DataFrame(adj_matrix[:, :, 0], index=cities, columns=cities)
-    print("\nMatriz de Distância (km):")
-    print(adj_matrix_df)
-    
-    adj_matrix_df_fuel = pd.DataFrame(adj_matrix[:, :, 1], index=cities, columns=cities)
-    print("\nMatriz de Combustível (litros):")
-    print(adj_matrix_df_fuel)
-    
-    adj_matrix_df_toll = pd.DataFrame(adj_matrix[:, :, 2], index=cities, columns=cities)
-    print("\nMatriz de Portagens (toll):")
-    print(adj_matrix_df_toll)
     
     return adj_matrix, cities
