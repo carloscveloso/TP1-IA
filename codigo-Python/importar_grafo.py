@@ -7,46 +7,54 @@ def importar_grafo(csv_file):
     df = pd.read_csv(csv_file, delimiter=',')
     df.columns = df.columns.str.strip()
 
-    print("Colunas do DataFrame:", df.columns.tolist())
-
     df["origin_city"] = df["origin_city"].str.strip()
     df["destination_city"] = df["destination_city"].str.strip()
 
-    df["distance_km"] = pd.to_numeric(df["distance_km"], errors='coerce').astype(np.float64)
-    df["fuel"] = pd.to_numeric(df["fuel"], errors='coerce').astype(np.float64)
     df["toll"] = pd.to_numeric(df["toll"], errors='coerce').astype(np.float64)
-    
-    # Verificar se o CSV foi carregado corretamente
-    print("Dados carregados:")
-    print(df.head())
+    df["fuel"] = pd.to_numeric(df["fuel"], errors='coerce').astype(np.float64)
+    df["distance_km"] = pd.to_numeric(df["distance_km"], errors='coerce').astype(np.float64)
 
     df = df.fillna({
-        "distance_km": np.nan,
+        "toll": np.nan,
         "fuel": np.nan,
-        "toll": np.nan
+        "distance_km": np.nan
     })
-    
+
     # Criar lista única de cidades
     cities = sorted(set(df["origin_city"].tolist() + df["destination_city"].tolist()))
-    n = len(cities)
-
-    # Criar matriz de adjacência inicializada com infinito (sem conexão)
-    adj_matrix = np.full((n, n, 3), np.nan)  
-    np.fill_diagonal(adj_matrix[:, :, 0], 0.0)  
-    np.fill_diagonal(adj_matrix[:, :, 1], 0.0)  
-    np.fill_diagonal(adj_matrix[:, :, 2], 0.0)     
     
-    # Criar mapeamento de índices das cidades
-    city_to_index = {city: i for i, city in enumerate(cities)}
+     # Inicializar a matriz de adjacência
+    adj_matrix = {}
     
-    # Preencher a matriz com distâncias, combustível e portagens
+    
+    # Preencher a matriz de adjacência com base nos dados
     for _, row in df.iterrows():
-        i, j = city_to_index[row["origin_city"]], city_to_index[row["destination_city"]]
-        
-        # Debug: Mostrar o que está sendo atribuído
-        print(f"Processando: {row['origin_city']} -> {row['destination_city']} | Distância: {row['distance_km']} | Combustível: {row['fuel']} | Portagens: {row['toll']}")
-        
-        adj_matrix[i, j] = [row["distance_km"], row["fuel"], row["toll"]]
-        adj_matrix[j, i] = [row["distance_km"], row["fuel"], row["toll"]] 
-    
+        origin_city = row["origin_city"]
+        destination_city = row["destination_city"]
+        toll = row["toll"]
+        fuel = row["fuel"]
+        distance_km = row["distance_km"]
+
+        # Verifica se a cidade de origem já está no dicionário
+        if origin_city not in adj_matrix:
+            adj_matrix[origin_city] = {}
+
+        # Adiciona o destino com os valores correspondentes
+        adj_matrix[origin_city][destination_city] = {
+            'toll': toll,
+            'fuel': fuel,
+            'distance_km': distance_km
+        }
+
+        # Adicionar também a ligação inversa para a simetria
+        if destination_city not in adj_matrix:
+            adj_matrix[destination_city] = {}
+
+        adj_matrix[destination_city][origin_city] = {
+            'toll': toll,
+            'fuel': fuel,
+            'distance_km': distance_km
+        }
+
+
     return adj_matrix, cities

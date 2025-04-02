@@ -61,37 +61,19 @@ def main():
     else:
         print("Opção inválida! Escolha 1, 2 ou 3.")
         return
-    
-    print(f"\nExecutando {nome_algoritmo}...\n")
 
     if not resultado:
         print(f"\nNenhum caminho encontrado entre {start_city} e {end_city}.")
         return
 
-    print("Caminhos possíveis:")
-    if not isinstance(resultado, list) or not resultado:
-        print("Erro: o algoritmo não retornou uma lista de caminhos válidos.")
-        return
+    # print("Caminhos possíveis:")
 
-    melhor_caminho = min(resultado, key=lambda x: sum(x[1]))
-
-    for i, (path, custos) in enumerate(resultado):
-        if not isinstance(custos, list) or len(custos) < 3:
-            print(f"Erro: estrutura inesperada no caminho {i+1}")
-            continue
-        custo_total = sum(custos)
-        print(f"{i+1}. Caminho: {' -> '.join(path)}")
-        print(f"Distância: {custos[0]} km")
-        print(f"Combustível: {custos[1]} L")
-        print(f"Portagens: {custos[2]} €")
-        print(f"Custo Total: {custo_total}\n")
-
-    print("\nMelhor Caminho Encontrado:")
-    print(f"Caminho: {' -> '.join(melhor_caminho[0])}")
-    print(f"Distância: {melhor_caminho[1][0]} km")
-    print(f"Combustível: {melhor_caminho[1][1]} L")
-    print(f"Portagens: {melhor_caminho[1][2]} €")
-    print(f"Custo Total: {sum(melhor_caminho[1])}")
+    # print("\nMelhor Caminho Encontrado:")
+    # print(f"Caminho: {' -> '.join(melhor_caminho[0])}")
+    # print(f"Distância: {melhor_caminho[1][0]} km")
+    # print(f"Combustível: {melhor_caminho[1][1]} L")
+    # print(f"Portagens: {melhor_caminho[1][2]} €")
+    # print(f"Custo Total: {sum(melhor_caminho[1])}")
 
 if __name__ == "__main__":
     main()

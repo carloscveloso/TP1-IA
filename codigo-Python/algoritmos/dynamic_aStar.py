@@ -13,7 +13,7 @@ class DynamicAStar:
         neighbors = []
         for i, costs in enumerate(self.adjacency_matrix[index]):
             if costs[0] != float('inf') and i != index:  
-                neighbors.append((self.cities[i], costs[0]))  
+                neighbors.append((self.cities[i], float(costs[0])))  
         return neighbors
 
     def h(self, city, goal_city):
@@ -44,7 +44,6 @@ class DynamicAStar:
 
         while open_list:
             _, current_city = heapq.heappop(open_list)
-
             if current_city == goal_city:
                 return self.reconstruct_path(start_city, goal_city)
 
@@ -55,7 +54,6 @@ class DynamicAStar:
                     continue
 
                 new_g = self.g_values[current_city] + cost
-
                 if new_g < self.g_values[neighbor]:
                     self.parents[neighbor] = current_city
                     self.g_values[neighbor] = new_g
