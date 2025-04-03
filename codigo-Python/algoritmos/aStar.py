@@ -52,10 +52,6 @@ class A_estrela:
 
                 path.append(start_city)
                 path.reverse()
-                print(f"Caminho encontrado: {path}")
-                print(f"Custo total de toll: {total_toll}")
-                print(f"Custo total de fuel: {total_fuel}")
-                print(f"Custo total de distance_km: {total_distance_km}")
                 return path, total_toll, total_fuel, total_distance_km
 
             for neighbor, costs in self.get_neighbors(n):

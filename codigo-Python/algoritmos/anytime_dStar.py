@@ -4,74 +4,81 @@ class AnytimeDStar:
     def __init__(self, adjacency_matrix, cities):
         self.adjacency_matrix = adjacency_matrix  
         self.cities = cities  
-        self.g_values = {}  
-        self.rhs_values = {}  
-        self.parents = {}  
-        self.open_list = []
-        self.goal = None  
+        self.g_score = {city: float('inf') for city in cities}  
+        self.rhs = {city: float('inf') for city in cities}  
+        self.open_list = [] 
+        self.km = 0  
+        self.goal_city = None  
 
     def get_neighbors(self, city):
-        index = self.cities.index(city)
-        neighbors = []
-        for i, costs in enumerate(self.adjacency_matrix[index]):
-            if costs[0] != float('inf') and i != index:  
-                neighbors.append((self.cities[i], costs[0]))  
-        return neighbors
+        if city not in self.adjacency_matrix:
+            print(f"Erro: cidade {city} não encontrada no grafo.")
+            return []
+
+        return [(neighbor, costs) for neighbor, costs in self.adjacency_matrix[city].items()]
 
     def h(self, city):
         return 1  
 
-    def initialize(self, start_city, goal_city):
-        self.goal = goal_city  
-
-        self.g_values = {city: float('inf') for city in self.cities}
-        self.rhs_values = {city: float('inf') for city in self.cities}
-        self.parents = {city: None for city in self.cities}
-
-        self.rhs_values[goal_city] = 0
-        heapq.heappush(self.open_list, (self.calculate_key(goal_city), goal_city))
-
     def update_vertex(self, city):
-        if city != self.goal:
-            self.rhs_values[city] = min(
-                [self.g_values[neighbor] + cost for neighbor, cost in self.get_neighbors(city)] or [float('inf')]
-            )
-
-        if city in self.open_list:
-            self.open_list = [(key, c) for key, c in self.open_list if c != city]
-            heapq.heapify(self.open_list)
-
-        if self.g_values[city] != self.rhs_values[city]:
+        """ Atualiza o vertex na open list. """
+        if self.g_score[city] != self.rhs[city]:
             heapq.heappush(self.open_list, (self.calculate_key(city), city))
 
     def calculate_key(self, city):
-        g_rhs_min = min(self.g_values[city], self.rhs_values[city])
-        return (g_rhs_min + self.h(city), g_rhs_min)  
+        return (min(self.g_score[city], self.rhs[city]) + self.h(city), min(self.g_score[city], self.rhs[city]))
+
+    def compute_shortest_path(self):
+        while self.open_list:
+            key, n = heapq.heappop(self.open_list)
+
+            if self.rhs[n] > self.g_score[n]:
+                self.g_score[n] = self.rhs[n]
+                for neighbor, costs in self.get_neighbors(n):
+                    toll, fuel, distance_km = costs['toll'], costs['fuel'], costs['distance_km']
+                    if neighbor in self.g_score:
+                        self.rhs[neighbor] = min(self.rhs[neighbor], self.g_score[n] + toll + fuel + distance_km)
+                    self.update_vertex(neighbor)
+
+            elif self.g_score[n] > self.rhs[n]:
+                self.g_score[n] = float('inf')
+                self.update_vertex(n)
+                for neighbor, costs in self.get_neighbors(n):
+                    toll, fuel, distance_km = costs['toll'], costs['fuel'], costs['distance_km']
+                    self.rhs[neighbor] = min(self.rhs[neighbor], self.g_score[n] + toll + fuel + distance_km)
+                    self.update_vertex(neighbor)
 
     def find_path(self, start_city, goal_city):
-        self.initialize(start_city, goal_city)
+        self.goal_city = goal_city
+        self.rhs[start_city] = 0
+        self.update_vertex(start_city)
 
-        while self.open_list and (self.open_list[0][0] < self.calculate_key(start_city) or self.rhs_values[start_city] != self.g_values[start_city]):
-            _, current_city = heapq.heappop(self.open_list)
+        self.compute_shortest_path()
 
-            if self.g_values[current_city] > self.rhs_values[current_city]:
-                self.g_values[current_city] = self.rhs_values[current_city]
-            else:
-                self.g_values[current_city] = float('inf')
-                self.update_vertex(current_city)
+        if self.g_score[goal_city] == float('inf'):
+            print('Caminho não encontrado!')
+            return None, float('inf'), float('inf'), float('inf')
 
-            for neighbor, _ in self.get_neighbors(current_city):
-                self.update_vertex(neighbor)
-
-        return self.reconstruct_path(start_city, goal_city)
-
-    def reconstruct_path(self, start, goal):
         path = []
-        current = start
-        while current is not None and current != goal:
-            path.append(current)
-            current = self.parents[current] if self.parents[current] in self.cities else None
+        current_city = goal_city
+        while current_city != start_city:
+            path.append(current_city)
+            min_cost = float('inf')
+            next_city = None
+            for neighbor, costs in self.get_neighbors(current_city):
+                toll, fuel, distance_km = costs['toll'], costs['fuel'], costs['distance_km']
+                cost = self.g_score[neighbor] + toll + fuel + distance_km
+                if cost < min_cost:
+                    min_cost = cost
+                    next_city = neighbor
+            if next_city is None:
+                break
+            current_city = next_city
 
-        path.append(goal)
-        total_cost = self.g_values[start]
-        return path, total_cost
+        path.append(start_city)
+        path.reverse()
+        total_toll = sum(self.adjacency_matrix[path[i]][path[i + 1]]['toll'] for i in range(len(path) - 1))
+        total_fuel = sum(self.adjacency_matrix[path[i]][path[i + 1]]['fuel'] for i in range(len(path) - 1))
+        total_distance_km = sum(self.adjacency_matrix[path[i]][path[i + 1]]['distance_km'] for i in range(len(path) - 1))
+
+        return path, total_toll, total_fuel, total_distance_km

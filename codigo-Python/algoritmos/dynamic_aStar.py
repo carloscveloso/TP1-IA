@@ -23,7 +23,7 @@ class DynamicAStar:
                     self.cost_updates[(destination, origin, key)] = new_costs[key]
 
     def find_path(self, start, goal):
-        """ Dynamic A* para encontrar o menor caminho, considerando custos de pedágio, combustível e distância. """
+        """ Dynamic A* para encontrar o menor caminho, considerando custos de portagens, combustível e distância. """
         open_list = []
         heapq.heappush(open_list, (0, start))
         
@@ -64,7 +64,7 @@ class DynamicAStar:
         return None  
 
     def reconstruct_path(self, came_from, current):
-        """ Reconstrói o caminho e calcula os custos acumulados de pedágio, combustível e distância. """
+        """ Reconstrói o caminho e calcula os custos acumulados de portagens, combustível e distância. """
         path = [current]
         total_toll = 0.0
         total_fuel = 0.0

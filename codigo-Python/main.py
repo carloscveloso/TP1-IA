@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 from algoritmos.aStar import A_estrela
-from algoritmos.dynamic_AStar import DynamicAStar
+from algoritmos.dynamic_aStar import DynamicAStar
 from algoritmos.anytime_DStar import AnytimeDStar
 from importar_grafo import importar_grafo
 
@@ -63,14 +63,28 @@ def main():
         print(f"\nNenhum caminho encontrado entre {start_city} e {end_city}.")
         return
 
-    # print("Caminhos possíveis:")
+    if algoritmo == "1":  # A*
+        path, total_toll, total_fuel, total_distance = resultado
+        print(f"\nCaminho encontrado: {path}")
+        print(f"Custo total de portagens: {total_toll}")
+        print(f"Custo total de combustível: {total_fuel}")
+        print(f"Distância total: {total_distance}")
 
-    # print("\nMelhor Caminho Encontrado:")
-    # print(f"Caminho: {' -> '.join(melhor_caminho[0])}")
-    # print(f"Distância: {melhor_caminho[1][0]} km")
-    # print(f"Combustível: {melhor_caminho[1][1]} L")
-    # print(f"Portagens: {melhor_caminho[1][2]} €")
-    # print(f"Custo Total: {sum(melhor_caminho[1])}")
+    elif algoritmo == "2":  # Dynamic A*
+        path, total_toll, total_fuel, total_distance = resultado
+        print(f"\nCaminho encontrado: {path}")
+        print(f"Custo total de portagens: {total_toll}")
+        print(f"Custo total de combustível: {total_fuel}")
+        print(f"Distância total: {total_distance}")
+
+    elif algoritmo == "3":  # Anytime D*
+        path, total_toll, total_fuel, total_distance = resultado
+        print(f"\nCaminho encontrado: {path}")
+        print(f"Custo total de portagens: {total_toll}")
+        print(f"Custo total de combustível: {total_fuel}")
+        print(f"Distância total: {total_distance}")
+    else:
+        print(f"\nCaminho encontrado: {resultado}")
 
 if __name__ == "__main__":
     main()
