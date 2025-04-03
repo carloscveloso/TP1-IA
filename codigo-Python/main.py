@@ -44,17 +44,14 @@ def main():
         return
 
     if algoritmo == "1":
-        nome_algoritmo = "A*"
         algoritmo_escolhido = A_estrela(adjacency_matrix=adj_matrix, cities=cities)
         resultado = algoritmo_escolhido.a_star_algorithm(start_city, end_city)
     
     elif algoritmo == "2":
-        nome_algoritmo = "Dynamic A*"
         algoritmo_escolhido = DynamicAStar(adjacency_matrix=adj_matrix, cities=cities)
         resultado = algoritmo_escolhido.find_path(start_city, end_city)
     
     elif algoritmo == "3":
-        nome_algoritmo = "Anytime D*"
         algoritmo_escolhido = AnytimeDStar(adjacency_matrix=adj_matrix, cities=cities)
         resultado = algoritmo_escolhido.find_path(start_city, end_city)
 
