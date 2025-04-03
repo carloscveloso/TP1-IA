@@ -1,84 +1,62 @@
 import heapq
 
 class AnytimeDStar:
-    def __init__(self, adjacency_matrix, cities):
-        self.adjacency_matrix = adjacency_matrix  
-        self.cities = cities  
-        self.g_score = {city: float('inf') for city in cities}  
-        self.rhs = {city: float('inf') for city in cities}  
-        self.open_list = [] 
-        self.km = 0  
-        self.goal_city = None  
+    def __init__(self, adjacency_matrix, cities, toll_weight=1.0, fuel_weight=1.0, distance_weight=1.0):
+        self.adjacency_matrix = adjacency_matrix
+        self.cities = cities
+        self.toll_weight = toll_weight
+        self.fuel_weight = fuel_weight
+        self.distance_weight = distance_weight
 
-    def get_neighbors(self, city):
-        if city not in self.adjacency_matrix:
-            print(f"Erro: cidade {city} não encontrada no grafo.")
-            return []
+    def find_path(self, start_city, end_city):
+        open_set = {start_city}
+        came_from = {}
+        g_score = {city: float('inf') for city in self.cities}
+        g_score[start_city] = 0
+        f_score = {city: float('inf') for city in self.cities}
+        f_score[start_city] = self.heuristic(start_city, end_city)
 
-        return [(neighbor, costs) for neighbor, costs in self.adjacency_matrix[city].items()]
+        while open_set:
+            current_city = min(open_set, key=lambda city: f_score[city])
 
-    def h(self, city):
-        return 1  
+            if current_city == end_city:
+                return self.reconstruct_path(came_from, current_city)
 
-    def update_vertex(self, city):
-        """ Atualiza o vertex na open list. """
-        if self.g_score[city] != self.rhs[city]:
-            heapq.heappush(self.open_list, (self.calculate_key(city), city))
+            open_set.remove(current_city)
 
-    def calculate_key(self, city):
-        return (min(self.g_score[city], self.rhs[city]) + self.h(city), min(self.g_score[city], self.rhs[city]))
+            for neighbor, costs in self.adjacency_matrix.get(current_city, {}).items():
+                tentative_g_score = g_score[current_city] + self.calculate_cost(costs)
 
-    def compute_shortest_path(self):
-        while self.open_list:
-            key, n = heapq.heappop(self.open_list)
+                if tentative_g_score < g_score[neighbor]:
+                    came_from[neighbor] = current_city
+                    g_score[neighbor] = tentative_g_score
+                    f_score[neighbor] = g_score[neighbor] + self.heuristic(neighbor, end_city)
+                    open_set.add(neighbor)
 
-            if self.rhs[n] > self.g_score[n]:
-                self.g_score[n] = self.rhs[n]
-                for neighbor, costs in self.get_neighbors(n):
-                    toll, fuel, distance_km = costs['toll'], costs['fuel'], costs['distance_km']
-                    if neighbor in self.g_score:
-                        self.rhs[neighbor] = min(self.rhs[neighbor], self.g_score[n] + toll + fuel + distance_km)
-                    self.update_vertex(neighbor)
+        return None
 
-            elif self.g_score[n] > self.rhs[n]:
-                self.g_score[n] = float('inf')
-                self.update_vertex(n)
-                for neighbor, costs in self.get_neighbors(n):
-                    toll, fuel, distance_km = costs['toll'], costs['fuel'], costs['distance_km']
-                    self.rhs[neighbor] = min(self.rhs[neighbor], self.g_score[n] + toll + fuel + distance_km)
-                    self.update_vertex(neighbor)
+    def calculate_cost(self, costs):
+        return (self.toll_weight * costs['toll'] +
+                self.fuel_weight * costs['fuel'] +
+                self.distance_weight * costs['distance_km'])
 
-    def find_path(self, start_city, goal_city):
-        self.goal_city = goal_city
-        self.rhs[start_city] = 0
-        self.update_vertex(start_city)
-
-        self.compute_shortest_path()
-
-        if self.g_score[goal_city] == float('inf'):
-            print('Caminho não encontrado!')
-            return None, float('inf'), float('inf'), float('inf')
-
+    def reconstruct_path(self, came_from, current_city):
+        total_toll = 0
+        total_fuel = 0
+        total_distance = 0
         path = []
-        current_city = goal_city
-        while current_city != start_city:
+
+        while current_city in came_from:
             path.append(current_city)
-            min_cost = float('inf')
-            next_city = None
-            for neighbor, costs in self.get_neighbors(current_city):
-                toll, fuel, distance_km = costs['toll'], costs['fuel'], costs['distance_km']
-                cost = self.g_score[neighbor] + toll + fuel + distance_km
-                if cost < min_cost:
-                    min_cost = cost
-                    next_city = neighbor
-            if next_city is None:
-                break
-            current_city = next_city
+            costs = self.adjacency_matrix[came_from[current_city]][current_city]
+            total_toll += costs['toll']
+            total_fuel += costs['fuel']
+            total_distance += costs['distance_km']
+            current_city = came_from[current_city]
 
-        path.append(start_city)
-        path.reverse()
-        total_toll = sum(self.adjacency_matrix[path[i]][path[i + 1]]['toll'] for i in range(len(path) - 1))
-        total_fuel = sum(self.adjacency_matrix[path[i]][path[i + 1]]['fuel'] for i in range(len(path) - 1))
-        total_distance_km = sum(self.adjacency_matrix[path[i]][path[i + 1]]['distance_km'] for i in range(len(path) - 1))
+        path.append(current_city)  
+        path.reverse()  
+        return path, total_toll, total_fuel, total_distance
 
-        return path, total_toll, total_fuel, total_distance_km
+    def heuristic(self, city1, city2):
+        return 0  
