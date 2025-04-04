@@ -64,25 +64,31 @@ def main():
         return
 
     if algoritmo == "1":  # A*
-        path, total_toll, total_fuel, total_distance = resultado
+        path, total_toll, total_fuel, total_distance, total_cost = resultado
         print(f"\nCaminho encontrado: {path}")
         print(f"Custo total de portagens: {total_toll}")
         print(f"Custo total de combustível: {total_fuel}")
         print(f"Distância total: {total_distance}")
+        print(f"Custo total (portagens + combustível + distância): {total_cost}")
+
 
     elif algoritmo == "2":  # Dynamic A*
-        path, total_toll, total_fuel, total_distance = resultado
+        path, total_toll, total_fuel, total_distance, total_cost = resultado
         print(f"\nCaminho encontrado: {path}")
         print(f"Custo total de portagens: {total_toll}")
         print(f"Custo total de combustível: {total_fuel}")
         print(f"Distância total: {total_distance}")
+        print(f"Custo total (portagens + combustível + distância): {total_cost}")
+
 
     elif algoritmo == "3":  # Anytime D*
-        path, total_toll, total_fuel, total_distance = resultado
+        path, total_toll, total_fuel, total_distance, total_cost = resultado
         print(f"\nCaminho encontrado: {path}")
         print(f"Custo total de portagens: {total_toll}")
         print(f"Custo total de combustível: {total_fuel}")
         print(f"Distância total: {total_distance}")
+        print(f"Custo total (portagens + combustível + distância): {total_cost}")
+
     else:
         print(f"\nCaminho encontrado: {resultado}")
 

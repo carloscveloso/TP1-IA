@@ -56,7 +56,10 @@ class AnytimeDStar:
 
         path.append(current_city)  
         path.reverse()  
-        return path, total_toll, total_fuel, total_distance
+
+        total_cost = total_distance + total_fuel + total_toll
+
+        return path, total_toll, total_fuel, total_distance, total_cost
 
     def heuristic(self, city1, city2):
         return 0  

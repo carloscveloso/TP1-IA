@@ -79,4 +79,7 @@ class DynamicAStar:
             current = prev_city
 
         path.reverse()
-        return path, total_toll, total_fuel, total_distance
+
+        total_cost = total_distance + total_fuel + total_toll
+        
+        return path, total_toll, total_fuel, total_distance, total_cost

@@ -52,7 +52,10 @@ class A_estrela:
 
                 path.append(start_city)
                 path.reverse()
-                return path, total_toll, total_fuel, total_distance_km
+
+                total_cost = total_toll + total_fuel + total_distance_km
+
+                return path, total_toll, total_fuel, total_distance_km, total_cost
 
             for neighbor, costs in self.get_neighbors(n):
                 toll, fuel, distance_km = costs['toll'], costs['fuel'], costs['distance_km']
