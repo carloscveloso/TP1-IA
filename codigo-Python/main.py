@@ -65,6 +65,8 @@ def main():
         
         caminhos_encontrados = encontrar_todos_os_caminhos(adj_matrix, start_city, end_city)
 
+        print(f"\nNúmero total de caminhos encontrados: {len(caminhos_encontrados)}")
+
         if not caminhos_encontrados:
             print(f"\nNenhum caminho encontrado entre {start_city} e {end_city}.")
             return
