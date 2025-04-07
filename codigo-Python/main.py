@@ -104,16 +104,12 @@ def main():
         melhor_caminho = caminhos_com_score[0]
         caminho, port, comb, dist, score = melhor_caminho
 
-        print("\nMelhor caminho absoluto que minimiza as 3 variáveis:")
+        print("\nMelhor caminho absoluto que minimiza as 10 variáveis:")
         print(f"{' -> '.join(caminho)}")
         print(f"Portagens: {port:.2f} | Combustível: {comb:.2f} | Distância: {dist:.2f} km | Score normalizado: {score:.4f}")
     
     else:
         print("Opção inválida! Escolha 1, 2, 3 ou 4.")
-        return
-
-    if not resultado:
-        print(f"\nNenhum caminho encontrado entre {start_city} e {end_city}.")
         return
 
     if algoritmo == "1":  # A*

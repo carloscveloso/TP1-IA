@@ -2,84 +2,108 @@ import heapq
 
 class DynamicAStar:
     def __init__(self, adjacency_matrix, cities):
-        self.graph = adjacency_matrix 
+        self.graph = adjacency_matrix
         self.cities = cities
-        self.cost_updates = {}  
+        self.g = {}
+        self.rhs = {}
+        self.U = []
+        self.km = 0
+        self.goal = None
+        self.cost_updates = {}
 
-    def heuristic(self, city1, city2):
-        """ Heurística baseada na distância em linha reta, se disponível """
-        if city1 in self.graph and city2 in self.graph[city1]:
-            return self.graph[city1][city2].get('distance_km', float('inf'))
-        return float('inf')  
+    def heuristic(self, a, b):
+        if a in self.graph and b in self.graph[a]:
+            return self.graph[a][b].get('distance_km', float('inf'))
+        return float('inf')
 
     def update_graph(self, origin, destination, new_costs):
-        """ Atualiza dinamicamente os custos de uma aresta no grafo. """
         if origin in self.graph and destination in self.graph[origin]:
             for key in ['toll', 'fuel', 'distance_km']:
                 if key in new_costs:
                     self.graph[origin][destination][key] = new_costs[key]
-                    self.graph[destination][origin][key] = new_costs[key]  
+                    self.graph[destination][origin][key] = new_costs[key]
                     self.cost_updates[(origin, destination, key)] = new_costs[key]
                     self.cost_updates[(destination, origin, key)] = new_costs[key]
 
+    def key(self, city):
+        min_g_rhs = min(self.g.get(city, float('inf')), self.rhs.get(city, float('inf')))
+        return (min_g_rhs + self.heuristic(city, self.goal), min_g_rhs)
+
+    def update_vertex(self, city):
+        if city != self.goal:
+            min_rhs = float('inf')
+            for neighbor in self.graph.get(city, {}):
+                cost = self.get_cost(city, neighbor)
+                min_rhs = min(min_rhs, self.g.get(neighbor, float('inf')) + cost)
+            self.rhs[city] = min_rhs
+
+        for i, (_, c) in enumerate(self.U):
+            if c == city:
+                self.U.pop(i)
+                heapq.heapify(self.U)
+                break
+
+        if self.g.get(city, float('inf')) != self.rhs.get(city, float('inf')):
+            heapq.heappush(self.U, (self.key(city), city))
+
+    def compute_shortest_path(self):
+        while self.U:
+            k_old, u = heapq.heappop(self.U)
+            g_u = self.g.get(u, float('inf'))
+            rhs_u = self.rhs.get(u, float('inf'))
+
+            if g_u > rhs_u:
+                self.g[u] = rhs_u
+                for neighbor in self.graph.get(u, {}):
+                    self.update_vertex(neighbor)
+            else:
+                self.g[u] = float('inf')
+                self.update_vertex(u)
+                for neighbor in self.graph.get(u, {}):
+                    self.update_vertex(neighbor)
+
+    def get_cost(self, from_city, to_city):
+        edge = self.graph[from_city][to_city]
+        cost_toll = self.cost_updates.get((from_city, to_city, 'toll'), edge.get('toll', 0))
+        cost_fuel = self.cost_updates.get((from_city, to_city, 'fuel'), edge.get('fuel', 0))
+        cost_distance = self.cost_updates.get((from_city, to_city, 'distance_km'), edge.get('distance_km', float('inf')))
+        return cost_toll + cost_fuel + cost_distance
+
     def find_path(self, start, goal):
-        """ Dynamic A* para encontrar o menor caminho, considerando custos de portagens, combustível e distância. """
-        open_list = []
-        heapq.heappush(open_list, (0, start))
-        
-        came_from = {}  
-        g_score = {city: float('inf') for city in self.cities}
-        g_score[start] = 0
+        self.goal = goal
+        self.g = {city: float('inf') for city in self.cities}
+        self.rhs = {city: float('inf') for city in self.cities}
+        self.rhs[goal] = 0
+        self.U = []
+        heapq.heappush(self.U, (self.key(goal), goal))
+        self.compute_shortest_path()
+        return self.extract_path(start)
 
-        f_score = {city: float('inf') for city in self.cities}
-        f_score[start] = self.heuristic(start, goal)
+    def extract_path(self, start):
+        current = start
+        path = [current]
+        total_toll = total_fuel = total_distance = 0.0
 
-        while open_list:
-            _, current = heapq.heappop(open_list)
-
-            if current == goal:
-                return self.reconstruct_path(came_from, current)
+        while current != self.goal:
+            min_cost = float('inf')
+            next_city = None
 
             for neighbor in self.graph.get(current, {}):
-                edge = self.graph[current][neighbor]
+                cost = self.get_cost(current, neighbor) + self.g.get(neighbor, float('inf'))
+                if cost < min_cost:
+                    min_cost = cost
+                    next_city = neighbor
+                    best_edge = self.graph[current][neighbor]
 
-                cost_toll = edge.get('toll', 0)
-                cost_fuel = edge.get('fuel', 0)
-                cost_distance = edge.get('distance_km', float('inf'))
+            if next_city is None:
+                return None  # Sem caminho
 
-                cost_toll = self.cost_updates.get((current, neighbor, 'toll'), cost_toll)
-                cost_fuel = self.cost_updates.get((current, neighbor, 'fuel'), cost_fuel)
-                cost_distance = self.cost_updates.get((current, neighbor, 'distance_km'), cost_distance)
+            total_toll += best_edge.get('toll', 0)
+            total_fuel += best_edge.get('fuel', 0)
+            total_distance += best_edge.get('distance_km', 0)
+            current = next_city
+            path.append(current)
 
-                total_cost = cost_distance + cost_fuel + cost_toll
-
-                tentative_g_score = g_score[current] + total_cost
-
-                if tentative_g_score < g_score[neighbor]:
-                    came_from[neighbor] = (current, cost_toll, cost_fuel, cost_distance)
-                    g_score[neighbor] = tentative_g_score
-                    f_score[neighbor] = g_score[neighbor] + self.heuristic(neighbor, goal)
-                    heapq.heappush(open_list, (f_score[neighbor], neighbor))
-
-        return None  
-
-    def reconstruct_path(self, came_from, current):
-        """ Reconstrói o caminho e calcula os custos acumulados de portagens, combustível e distância. """
-        path = [current]
-        total_toll = 0.0
-        total_fuel = 0.0
-        total_distance = 0.0
-
-        while current in came_from:
-            prev_city, toll, fuel, distance = came_from[current]
-            total_toll += toll
-            total_fuel += fuel
-            total_distance += distance
-            path.append(prev_city)
-            current = prev_city
-
-        path.reverse()
-
-        total_cost = total_distance + total_fuel + total_toll
+        total_cost = total_toll + total_fuel + total_distance
         
         return path, total_toll, total_fuel, total_distance, total_cost
