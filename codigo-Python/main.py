@@ -106,7 +106,7 @@ def main():
         melhor_caminho = caminhos_com_score[0]
         caminho, port, comb, dist, score = melhor_caminho
 
-        print("\nMelhor caminho absoluto que minimiza as 10 variáveis:")
+        print("\nMelhor caminho absoluto que minimiza as 3 variáveis:")
         print(f"{' -> '.join(caminho)}")
         print(f"Portagens: {port:.2f} | Combustível: {comb:.2f} | Distância: {dist:.2f} km | Score normalizado: {score:.4f}")
     
