@@ -1,7 +1,7 @@
 import heapq
 
 class AnytimeDStar:
-    def __init__(self, adjacency_matrix, cities, toll_weight=1.0, fuel_weight=1.0, distance_weight=1.0, epsilon=2.5):
+    def __init__(self, adjacency_matrix, cities, toll_weight=1.0, fuel_weight=1.0, distance_weight=1.0, epsilon=0.5):
         self.adjacency_matrix = adjacency_matrix
         self.cities = cities
         self.toll_weight = toll_weight
