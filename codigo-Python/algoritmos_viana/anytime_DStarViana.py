@@ -1,4 +1,6 @@
 import heapq
+import math
+import numpy as np
 
 class AnytimeDStar:
     def __init__(self, adjacency_matrix, cities, 
@@ -9,16 +11,35 @@ class AnytimeDStar:
         self.duration_weight = duration_weight
         self.distance_weight = distance_weight
         self.epsilon = epsilon
+        self.city_coords = self._extract_coords()
+
+    def _extract_coords(self):
+        coords = {}
+        for city in self.cities:
+            neighbors = self.adjacency_matrix.get(city, {})
+            for neighbor, data in neighbors.items():
+                lat = data.get('intersect_lat')
+                lon = data.get('intersect_lon')
+                if lat is not None and lon is not None and not np.isnan(lat) and not np.isnan(lon):
+                    coords[city] = (lat, lon)
+                    break
+        return coords
 
     def heuristic(self, city1, city2):
-        if city1 in self.adjacency_matrix and city2 in self.adjacency_matrix[city1]:
-            return self.adjacency_matrix[city1][city2].get('distance_meters', 0)
-        return 0
+        coord1 = self.city_coords.get(city1)
+        coord2 = self.city_coords.get(city2)
+
+        if not coord1 or not coord2:
+            return 0
+
+        lat1, lon1 = coord1
+        lat2, lon2 = coord2
+        return math.sqrt((lat1 - lat2) ** 2 + (lon1 - lon2) ** 2)
 
     def calculate_cost(self, costs):
-        return (self.unlevel_weight * costs['unlevel_percent'] +
-                self.duration_weight * costs['duration_minutes'] +
-                self.distance_weight * costs['distance_meters'])
+        return (self.unlevel_weight * costs.get('unlevel_percent', 0) +
+                self.duration_weight * costs.get('duration_minutes', 0) +
+                self.distance_weight * costs.get('distance_meters', 0))
 
     def update_edge_costs(self, city_a, city_b, new_costs):
         for key in ['unlevel_percent', 'duration_minutes', 'distance_meters']:
@@ -61,15 +82,15 @@ class AnytimeDStar:
         while current in came_from:
             prev = came_from[current]
             costs = self.adjacency_matrix[prev][current]
-            total_unlevel += costs['unlevel_percent']
-            total_duration += costs['duration_minutes']
-            total_distance += costs['distance_meters']
+            total_unlevel += costs.get('unlevel_percent', 0)
+            total_duration += costs.get('duration_minutes', 0)
+            total_distance += costs.get('distance_meters', 0)
             path.append(prev)
             current = prev
 
         path.reverse()
         total_cost = total_unlevel + total_duration + total_distance
-        return path, total_unlevel, total_duration, total_distance, total_cost
+        return path, total_distance, total_duration, total_unlevel, total_cost
 
     def refine_path(self, start_city, end_city, min_epsilon=1.0, step=0.5):
         current_epsilon = self.epsilon

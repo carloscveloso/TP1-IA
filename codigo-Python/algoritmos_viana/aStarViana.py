@@ -1,18 +1,41 @@
+import math
+import numpy as np
 from collections import deque
 
 class A_estrela:
     def __init__(self, adjacency_matrix, cities):
         self.adjacency_matrix = adjacency_matrix  
         self.cities = cities  
-    
+        self.city_coords = self._extract_coords()  
+
+    def _extract_coords(self):
+        coords = {}
+        for city in self.cities:
+            neighbors = self.adjacency_matrix.get(city, {})
+            for neighbor, data in neighbors.items():
+                lat = data.get('intersect_lat')
+                lon = data.get('intersect_lon')
+                if not np.isnan(lat) and not np.isnan(lon):
+                    coords[city] = (lat, lon)
+                    break
+        return coords
+
     def get_neighbors(self, city):
         if city not in self.adjacency_matrix:
             print(f"Erro: cidade {city} não encontrada no grafo.")
             return []
         return [(neighbor, costs) for neighbor, costs in self.adjacency_matrix[city].items()]
-    
-    def h(self, city):
-        return 1  # Heurística simplificada (pode ser melhorada)
+
+    def h(self, city, goal_city):
+        coord1 = self.city_coords.get(city)
+        coord2 = self.city_coords.get(goal_city)
+
+        if not coord1 or not coord2:
+            return 0  
+
+        lat1, lon1 = coord1
+        lat2, lon2 = coord2
+        return math.sqrt((lat1 - lat2)**2 + (lon1 - lon2)**2)
 
     def a_star_algorithm(self, start_city, goal_city):
         open_list = set([start_city])
@@ -29,7 +52,7 @@ class A_estrela:
         while open_list:
             n = None
             for city in open_list:
-                if n is None or (total_cost(city) + self.h(city)) < (total_cost(n) + self.h(n)):
+                if n is None or (total_cost(city) + self.h(city, goal_city)) < (total_cost(n) + self.h(n, goal_city)):
                     n = city
 
             if n is None:
@@ -50,7 +73,7 @@ class A_estrela:
                 path.reverse()
 
                 total = total_unlevel + total_duration + total_distance
-                return path, total_unlevel, total_duration, total_distance, total
+                return path, total_distance, total_duration, total_unlevel, total
 
             for neighbor, costs in self.get_neighbors(n):
                 unlevel = costs.get('unlevel_percent', 0)

@@ -17,7 +17,6 @@ def calcular_custos_do_caminho_viana(adj_matrix, path):
 
     return total_distance, total_duration, total_unlevel
 
-
 def encontrar_todos_os_caminhos_viana(adj_matrix, start_city, end_city, path=None, limite=10):
     if path is None:
         path = []

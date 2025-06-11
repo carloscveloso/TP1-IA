@@ -105,11 +105,13 @@ def main():
         print(f"{' -> '.join(caminho)}")
         print(f"Distância: {dist:.2f} m | Duração: {dur:.2f} min | Inclinação: {inc:.2f}% | Score normalizado: {score:.4f}")
 
+        return 
+
     else:
         print("Opção inválida! Escolha 1, 2, 3 ou 4.")
         return
 
-    if algoritmo in ["1", "2", "3"]:
+    if resultado:
         path, total_dist, total_dur, total_inc, total_cost = resultado
         print(f"\nCaminho encontrado: {path}")
         print(f"Distância total: {total_dist:.2f} m")

@@ -1,4 +1,6 @@
 import heapq
+import math
+import numpy as np
 
 class DynamicAStar:
     def __init__(self, adjacency_matrix, cities):
@@ -10,11 +12,39 @@ class DynamicAStar:
         self.km = 0
         self.goal = None
         self.cost_updates = {}
+        self.city_coords = self._extract_coords()
+
+    def _extract_coords(self):
+        coords = {}
+        for city in self.cities:
+            neighbors = self.graph.get(city, {})
+            for neighbor, data in neighbors.items():
+                lat = data.get('intersect_lat')
+                lon = data.get('intersect_lon')
+                if lat is not None and lon is not None and not np.isnan(lat) and not np.isnan(lon):
+                    coords[city] = (lat, lon)
+                    break
+        return coords
 
     def heuristic(self, a, b):
-        if a in self.graph and b in self.graph[a]:
-            return self.graph[a][b].get('distance_meters', float('inf'))
-        return float('inf')
+        coord1 = self.city_coords.get(a)
+        coord2 = self.city_coords.get(b)
+        if not coord1 or not coord2:
+            return 0  
+
+        lat1, lon1 = coord1
+        lat2, lon2 = coord2
+        return math.sqrt((lat1 - lat2) ** 2 + (lon1 - lon2) ** 2)
+
+    def _haversine(self, lat1, lon1, lat2, lon2):
+        R = 6371000  
+        phi1, phi2 = math.radians(lat1), math.radians(lat2)
+        d_phi = math.radians(lat2 - lat1)
+        d_lambda = math.radians(lon2 - lon1)
+
+        a = math.sin(d_phi/2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda/2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return R * c
 
     def update_graph(self, origin, destination, new_costs):
         if origin in self.graph and destination in self.graph[origin]:
@@ -96,7 +126,7 @@ class DynamicAStar:
                     best_edge = self.graph[current][neighbor]
 
             if next_city is None:
-                return None  # Sem caminho possível
+                return None  
 
             total_unlevel += best_edge.get('unlevel_percent', 0)
             total_duration += best_edge.get('duration_minutes', 0)
