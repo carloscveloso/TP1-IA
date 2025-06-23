@@ -17,107 +17,112 @@ def main():
 
     adj_matrix, cities = importar_grafo_viana(csv_file)
 
-    print("\nEscolha o algoritmo: ")
-    print("1 - A*")
-    print("2 - Dynamic A*")
-    print("3 - Anytime D*")
-    print("4 - All Paths")
+    while True:
+        print("\nEscolha o algoritmo: ")
+        print("1 - A*")
+        print("2 - Dynamic A*")
+        print("3 - Anytime D*")
+        print("4 - All Paths")
+        print("0 - Sair")
 
-    algoritmo = input("Digite o número do algoritmo desejado: ").strip()
+        algoritmo = input("Digite o número do algoritmo desejado: ").strip()
 
-    print("\nLista de nós disponíveis: ")
-    for i, city in enumerate(sorted(cities)):
-        print(f"{i}: {city}")
+        if algoritmo == "0":
+            print("Programa terminado.")
+            break
 
-    try:
-        start_index = int(input("Escolha o número do nó de origem: ").strip())
-        end_index = int(input("Escolha o número do nó de destino: ").strip())
+        print("\nLista de nós disponíveis: ")
+        for i, city in enumerate(sorted(cities)):
+            print(f"{i}: {city}")
 
-        if start_index < 0 or start_index >= len(cities) or end_index < 0 or end_index >= len(cities):
-            print("Índice inválido. Por favor, escolha um número dentro da lista.")
-            return
+        try:
+            start_index = int(input("Escolha o número do nó de origem: ").strip())
+            end_index = int(input("Escolha o número do nó de destino: ").strip())
 
-        start_city = cities[start_index]
-        end_city = cities[end_index]
+            if start_index < 0 or start_index >= len(cities) or end_index < 0 or end_index >= len(cities):
+                print("Índice inválido. Por favor, escolha um número dentro da lista.")
+                continue
 
-    except ValueError:
-        print("Por favor, insira um número válido.")
-        return
+            start_city = cities[start_index]
+            end_city = cities[end_index]
 
-    resultado = None
+        except ValueError:
+            print("Por favor, insira um número válido.")
+            continue
 
-    if algoritmo == "1":
-        algoritmo_escolhido = A_estrela(adjacency_matrix=adj_matrix, cities=cities)
-        resultado = algoritmo_escolhido.a_star_algorithm(start_city, end_city)
+        resultado = None
 
-    elif algoritmo == "2":
-        algoritmo_escolhido = DynamicAStar(adjacency_matrix=adj_matrix, cities=cities)
-        resultado = algoritmo_escolhido.find_path(start_city, end_city)
+        if algoritmo == "1":
+            algoritmo_escolhido = A_estrela(adjacency_matrix=adj_matrix, cities=cities)
+            resultado = algoritmo_escolhido.a_star_algorithm(start_city, end_city)
 
-    elif algoritmo == "3":
-        algoritmo_escolhido = AnytimeDStar(adjacency_matrix=adj_matrix, cities=cities)
-        resultado = algoritmo_escolhido.find_path(start_city, end_city)
+        elif algoritmo == "2":
+            algoritmo_escolhido = DynamicAStar(adjacency_matrix=adj_matrix, cities=cities)
+            resultado = algoritmo_escolhido.find_path(start_city, end_city)
 
-    elif algoritmo == "4":
-        print("\nA procurar todos os caminhos possíveis... isto pode demorar.")
-        caminhos_encontrados = encontrar_todos_os_caminhos_viana(adj_matrix, start_city, end_city)
+        elif algoritmo == "3":
+            algoritmo_escolhido = AnytimeDStar(adjacency_matrix=adj_matrix, cities=cities)
+            resultado = algoritmo_escolhido.find_path(start_city, end_city)
 
-        print(f"\nNúmero total de caminhos encontrados: {len(caminhos_encontrados)}")
+        elif algoritmo == "4":
+            print("\nA procurar todos os caminhos possíveis... isto pode demorar.")
+            caminhos_encontrados = encontrar_todos_os_caminhos_viana(adj_matrix, start_city, end_city)
 
-        if not caminhos_encontrados:
-            print(f"\nNenhum caminho encontrado entre {start_city} e {end_city}.")
-            return
+            print(f"\nNúmero total de caminhos encontrados: {len(caminhos_encontrados)}")
 
-        todos_os_custos = []
-        for caminho in caminhos_encontrados:
-            distancia, duracao, inclinacao = calcular_custos_do_caminho_viana(adj_matrix, caminho)
-            if distancia is not None:
-                todos_os_custos.append((caminho, distancia, duracao, inclinacao))
+            if not caminhos_encontrados:
+                print(f"\nNenhum caminho encontrado entre {start_city} e {end_city}.")
+                continue
 
-        if not todos_os_custos:
-            print("\nTodos os caminhos estavam corrompidos ou inválidos.")
-            return
+            todos_os_custos = []
+            for caminho in caminhos_encontrados:
+                distancia, duracao, inclinacao = calcular_custos_do_caminho_viana(adj_matrix, caminho)
+                if distancia is not None:
+                    todos_os_custos.append((caminho, distancia, duracao, inclinacao))
 
-        max_dist = max(x[1] for x in todos_os_custos)
-        max_dur = max(x[2] for x in todos_os_custos)
-        max_inc = max(x[3] for x in todos_os_custos)
+            if not todos_os_custos:
+                print("\nTodos os caminhos estavam corrompidos ou inválidos.")
+                continue
 
-        caminhos_com_score = []
-        for caminho, dist, dur, inc in todos_os_custos:
-            norm_dist = dist / max_dist if max_dist else 0
-            norm_dur = dur / max_dur if max_dur else 0
-            norm_inc = inc / max_inc if max_inc else 0
+            max_dist = max(x[1] for x in todos_os_custos)
+            max_dur = max(x[2] for x in todos_os_custos)
+            max_inc = max(x[3] for x in todos_os_custos)
 
-            score = norm_dist + norm_dur + norm_inc
-            caminhos_com_score.append((caminho, dist, dur, inc, score))
+            caminhos_com_score = []
+            for caminho, dist, dur, inc in todos_os_custos:
+                norm_dist = dist / max_dist if max_dist else 0
+                norm_dur = dur / max_dur if max_dur else 0
+                norm_inc = inc / max_inc if max_inc else 0
 
-        caminhos_com_score.sort(key=lambda x: x[4])
+                score = norm_dist + norm_dur + norm_inc
+                caminhos_com_score.append((caminho, dist, dur, inc, score))
 
-        print("\nTop 10 caminhos mais equilibrados (minimizando distância, duração e inclinação):")
-        for i, (caminho, dist, dur, inc, score) in enumerate(caminhos_com_score[:10], 1):
-            print(f"\n{i}) {' -> '.join(caminho)}")
+            caminhos_com_score.sort(key=lambda x: x[4])
+
+            print("\nTop 10 caminhos mais equilibrados (minimizando distância, duração e inclinação):")
+            for i, (caminho, dist, dur, inc, score) in enumerate(caminhos_com_score[:10], 1):
+                print(f"\n{i}) {' -> '.join(caminho)}")
+                print(f"Distância: {dist:.2f} m | Duração: {dur:.2f} min | Inclinação: {inc:.2f}% | Score normalizado: {score:.4f}")
+
+            melhor_caminho = caminhos_com_score[0]
+            caminho, dist, dur, inc, score = melhor_caminho
+
+            print("\nMelhor caminho absoluto:")
+            print(f"{' -> '.join(caminho)}")
             print(f"Distância: {dist:.2f} m | Duração: {dur:.2f} min | Inclinação: {inc:.2f}% | Score normalizado: {score:.4f}")
+            continue
 
-        melhor_caminho = caminhos_com_score[0]
-        caminho, dist, dur, inc, score = melhor_caminho
+        else:
+            print("Opção inválida! Escolha 0, 1, 2, 3 ou 4.")
+            continue
 
-        print("\nMelhor caminho absoluto:")
-        print(f"{' -> '.join(caminho)}")
-        print(f"Distância: {dist:.2f} m | Duração: {dur:.2f} min | Inclinação: {inc:.2f}% | Score normalizado: {score:.4f}")
-
-        return 
-
-    else:
-        print("Opção inválida! Escolha 1, 2, 3 ou 4.")
-        return
-
-    if resultado:
-        path, total_dist, total_dur, total_inc, total_cost = resultado
-        print(f"\nCaminho encontrado: {path}")
-        print(f"Distância total: {total_dist:.2f} m")
-        print(f"Duração total: {total_dur:.2f} min")
-        print(f"Inclinação total: {total_inc:.2f}%")
-        print(f"Custo total (soma normalizada): {total_cost:.4f}")
+        if resultado:
+            path, total_dist, total_dur, total_inc, total_cost = resultado
+            print(f"\nCaminho encontrado: {path}")
+            print(f"Distância total: {total_dist:.2f} m")
+            print(f"Duração total: {total_dur:.2f} min")
+            print(f"Inclinação total: {total_inc:.2f}%")
+            print(f"Custo total (soma normalizada): {total_cost:.4f}")
 
 if __name__ == "__main__":
     main()
